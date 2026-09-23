@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { buildUserProfile } from "../utils/profile.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -147,5 +148,27 @@ export const loginUser = async (req, res) => {
       success: false,
       message: "Server error while logging in",
     });
+  }
+};
+
+export const getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User account no longer exists",
+        errors: [],
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Current user retrieved successfully",
+      data: buildUserProfile(user),
+    });
+  } catch (error) {
+    return next(error);
   }
 };

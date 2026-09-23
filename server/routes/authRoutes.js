@@ -2,6 +2,7 @@ import express from "express";
 import {
   registerUser,
   loginUser,
+  getCurrentUser,
 } from "../controllers/authController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -11,12 +12,6 @@ router.post("/register", registerUser);
 
 router.post("/login", loginUser);
 
-router.get("/me", authMiddleware, (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Protected route accessed successfully",
-    user: req.user,
-  });
-});
+router.get("/me", authMiddleware, getCurrentUser);
 
 export default router;
