@@ -1,4 +1,5 @@
 import PracticeQuestion from "../models/PracticeQuestion.js";
+import getPracticeProgressService from "../services/practiceProgressService.js";
 
 export const getPracticeQuestions = async (req, res, next) => {
   try {
@@ -40,12 +41,8 @@ export const getPracticeQuestions = async (req, res, next) => {
     );
 
     const questions = await PracticeQuestion.find(query)
-      .select(
-        "-correctAnswer -expectedAnswer -explanation"
-      )
-      .sort({
-        createdAt: -1,
-      })
+      .select("-correctAnswer -expectedAnswer -explanation")
+      .sort({ createdAt: -1 })
       .limit(parsedLimit)
       .lean();
 
@@ -74,9 +71,7 @@ export const getPracticeQuestionById = async (
       _id: id,
       isActive: true,
     })
-      .select(
-        "-correctAnswer -expectedAnswer -explanation"
-      )
+      .select("-correctAnswer -expectedAnswer -explanation")
       .lean();
 
     if (!question) {
@@ -129,9 +124,13 @@ export const createPracticeQuestion = async (
     }
 
     if (
-      !["mcq", "technical", "behavioral", "coding", "scenario"].includes(
-        questionType
-      )
+      ![
+        "mcq",
+        "technical",
+        "behavioral",
+        "coding",
+        "scenario",
+      ].includes(questionType)
     ) {
       return res.status(400).json({
         success: false,
@@ -157,30 +156,62 @@ export const createPracticeQuestion = async (
       });
     }
 
-    const practiceQuestion = await PracticeQuestion.create({
-      question: question.trim(),
-      questionType,
-      category,
-      difficulty: difficulty || "medium",
-      targetRoles: Array.isArray(targetRoles)
-        ? targetRoles
-        : [],
-      skills: Array.isArray(skills) ? skills : [],
-      options: Array.isArray(options) ? options : [],
-      correctAnswer: correctAnswer || "",
-      expectedAnswer: expectedAnswer || "",
-      explanation: explanation || "",
-      hints: Array.isArray(hints) ? hints : [],
-      evaluationCriteria: Array.isArray(evaluationCriteria)
-        ? evaluationCriteria
-        : [],
-      source: source || "system",
-    });
+    const practiceQuestion =
+      await PracticeQuestion.create({
+        question: question.trim(),
+        questionType,
+        category,
+        difficulty: difficulty || "medium",
+        targetRoles: Array.isArray(targetRoles)
+          ? targetRoles
+          : [],
+        skills: Array.isArray(skills)
+          ? skills
+          : [],
+        options: Array.isArray(options)
+          ? options
+          : [],
+        correctAnswer: correctAnswer || "",
+        expectedAnswer: expectedAnswer || "",
+        explanation: explanation || "",
+        hints: Array.isArray(hints)
+          ? hints
+          : [],
+        evaluationCriteria: Array.isArray(
+          evaluationCriteria
+        )
+          ? evaluationCriteria
+          : [],
+        source: source || "system",
+      });
 
     return res.status(201).json({
       success: true,
-      message: "Practice question created successfully",
+      message:
+        "Practice question created successfully",
       data: practiceQuestion,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getPracticeProgress = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const progress =
+      await getPracticeProgressService(
+        req.user.userId
+      );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Practice progress retrieved successfully",
+      data: progress,
     });
   } catch (error) {
     return next(error);

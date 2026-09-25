@@ -10,6 +10,8 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
 import roadmapRoutes from "./routes/roadmapRoutes.js";
 import practiceRoutes from "./routes/practiceRoutes.js";
+import practiceAttemptRoutes from "./routes/practiceAttemptRoutes.js";
+import practiceSessionRoutes from "./routes/practiceSessionRoutes.js";
 
 import {
   errorMiddleware,
@@ -39,7 +41,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/roadmap", roadmapRoutes);
 app.use("/api/practice", practiceRoutes);
-
+app.use("/api/practice", practiceAttemptRoutes);
+app.use("/api/practice-sessions", practiceSessionRoutes);
 app.get("/", (req, res) => {
   res.json({
     success: true,

@@ -1,19 +1,11 @@
 import PracticeAttempt from "../models/PracticeAttempt.js";
 import PracticeQuestion from "../models/PracticeQuestion.js";
+import evaluatePracticeAnswer from "../services/practiceEvaluationService.js";
 
-export const submitPracticeAttempt = async (
-  req,
-  res,
-  next
-) => {
+export const submitPracticeAttempt = async (req, res, next) => {
   try {
     const { questionId } = req.params;
-
-    const {
-      answer,
-      selectedOption,
-      timeTaken,
-    } = req.body;
+    const { answer, selectedOption, timeTaken } = req.body;
 
     if (!answer && !selectedOption) {
       return res.status(400).json({
@@ -38,22 +30,17 @@ export const submitPracticeAttempt = async (
 
     let isCorrect = null;
     let score = 0;
+    let evaluationStatus = "pending";
 
-    /*
-     * MCQ questions can be evaluated immediately.
-     * Technical, behavioral, coding, and scenario
-     * questions will be evaluated later by the
-     * evaluation system.
-     */
     if (question.questionType === "mcq") {
-      const submittedAnswer =
-        selectedOption || answer;
+      const submittedAnswer = selectedOption || answer;
 
       isCorrect =
         submittedAnswer.trim().toLowerCase() ===
         question.correctAnswer.trim().toLowerCase();
 
       score = isCorrect ? 100 : 0;
+      evaluationStatus = "completed";
     }
 
     const practiceAttempt = await PracticeAttempt.create({
@@ -64,10 +51,7 @@ export const submitPracticeAttempt = async (
       isCorrect,
       score,
       timeTaken: Number(timeTaken) || 0,
-      evaluationStatus:
-        question.questionType === "mcq"
-          ? "completed"
-          : "pending",
+      evaluationStatus,
     });
 
     await PracticeQuestion.findByIdAndUpdate(
@@ -88,9 +72,92 @@ export const submitPracticeAttempt = async (
         questionType: question.questionType,
         isCorrect,
         score,
-        evaluationStatus:
-          practiceAttempt.evaluationStatus,
+        evaluationStatus: practiceAttempt.evaluationStatus,
         submittedAt: practiceAttempt.createdAt,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const evaluatePracticeAttempt = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { attemptId } = req.params;
+
+    const attempt = await PracticeAttempt.findOne({
+      _id: attemptId,
+      user: req.user.userId,
+    });
+
+    if (!attempt) {
+      return res.status(404).json({
+        success: false,
+        message: "Practice attempt not found",
+        errors: [],
+      });
+    }
+
+    if (attempt.evaluationStatus === "completed") {
+      return res.status(200).json({
+        success: true,
+        message: "Practice attempt is already evaluated",
+        data: {
+          attemptId: attempt._id,
+          score: attempt.score,
+          isCorrect: attempt.isCorrect,
+          evaluationStatus: attempt.evaluationStatus,
+          feedback: attempt.feedback,
+          strengths: attempt.strengths,
+          improvementAreas: attempt.improvementAreas,
+        },
+      });
+    }
+
+    if (!attempt.answer?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot evaluate an empty answer",
+        errors: [],
+      });
+    }
+
+    const evaluation = await evaluatePracticeAnswer({
+      questionId: attempt.question,
+      answer: attempt.answer,
+    });
+
+    attempt.score = evaluation.score;
+    attempt.feedback = evaluation.feedback;
+    attempt.strengths = evaluation.strengths;
+    attempt.improvementAreas =
+      evaluation.improvementAreas;
+    attempt.evaluationStatus = "completed";
+
+    if (attempt.questionType === "mcq") {
+      attempt.isCorrect =
+        evaluation.score === 100;
+    }
+
+    await attempt.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Practice attempt evaluated successfully",
+      data: {
+        attemptId: attempt._id,
+        questionId: attempt.question,
+        score: attempt.score,
+        isCorrect: attempt.isCorrect,
+        evaluationStatus: attempt.evaluationStatus,
+        feedback: attempt.feedback,
+        strengths: attempt.strengths,
+        improvementAreas: attempt.improvementAreas,
+        evaluatedAt: attempt.updatedAt,
       },
     });
   } catch (error) {
@@ -111,9 +178,7 @@ export const getPracticeAttempts = async (
         "question",
         "question questionType category difficulty skills"
       )
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ createdAt: -1 })
       .lean();
 
     return res.status(200).json({

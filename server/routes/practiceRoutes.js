@@ -6,20 +6,31 @@ import {
   getPracticeQuestions,
   getPracticeQuestionById,
   createPracticeQuestion,
+  getPracticeProgress,
 } from "../controllers/practiceController.js";
 
 const router = express.Router();
 
-// All practice routes require authentication
 router.use(authMiddleware);
 
-// Get practice questions
-router.get("/questions", getPracticeQuestions);
+router.get(
+  "/questions",
+  getPracticeQuestions
+);
 
-// Get one practice question
-router.get("/questions/:id", getPracticeQuestionById);
+router.get(
+  "/questions/:id",
+  getPracticeQuestionById
+);
 
-// Create a practice question
-router.post("/questions", createPracticeQuestion);
+router.post(
+  "/questions",
+  createPracticeQuestion
+);
+
+router.get(
+  "/progress",
+  getPracticeProgress
+);
 
 export default router;
