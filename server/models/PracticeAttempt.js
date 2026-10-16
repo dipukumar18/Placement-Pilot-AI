@@ -27,6 +27,12 @@ const practiceAttemptSchema = new mongoose.Schema(
       trim: true,
     },
 
+    language: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
     isCorrect: {
       type: Boolean,
       default: null,

@@ -1,91 +1,338 @@
+
 const ROLE_SKILL_REQUIREMENTS = {
-  "software developer": [
-    "JavaScript",
+  "software development engineer (sde)": [
+    "Programming",
     "Data Structures and Algorithms",
     "Problem Solving",
+    "Object-Oriented Programming",
+    "DBMS",
+    "Operating Systems",
+    "Computer Networks",
     "Git",
     "SQL",
-    "REST API",
+    "Testing",
+  ],
+
+  "software engineer": [
+    "Programming",
+    "Data Structures and Algorithms",
+    "Problem Solving",
     "Object-Oriented Programming",
+    "DBMS",
+    "Operating Systems",
+    "Computer Networks",
+    "Git",
+    "SQL",
+    "Testing",
+  ],
+
+  "associate software engineer": [
+    "Programming",
+    "Data Structures and Algorithms",
+    "Problem Solving",
+    "Object-Oriented Programming",
+    "DBMS",
+    "SQL",
+    "Git",
+    "Testing",
   ],
 
   "frontend developer": [
-    "JavaScript",
-    "React",
     "HTML",
     "CSS",
-    "Git",
-    "REST API",
+    "JavaScript",
+    "React",
     "Responsive Design",
+    "REST API",
+    "Git",
+    "Web Accessibility",
+    "Testing",
   ],
 
   "backend developer": [
     "Node.js",
     "Express.js",
     "JavaScript",
-    "MongoDB",
-    "SQL",
     "REST API",
     "Authentication",
+    "SQL",
+    "MongoDB",
+    "DBMS",
     "Git",
+    "Testing",
   ],
 
   "full stack developer": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "React",
+    "Node.js",
+    "Express.js",
+    "REST API",
+    "MongoDB",
+    "SQL",
+    "Authentication",
+    "Git",
+    "Testing",
+  ],
+
+  "mern stack developer": [
+    "HTML",
+    "CSS",
     "JavaScript",
     "React",
     "Node.js",
     "Express.js",
     "MongoDB",
-    "SQL",
     "REST API",
-    "Git",
     "Authentication",
-  ],
-
-  "data analyst": [
-    "Python",
-    "SQL",
-    "Excel",
-    "Data Analysis",
-    "Statistics",
-    "Data Visualization",
-  ],
-
-  "data scientist": [
-    "Python",
-    "SQL",
-    "Statistics",
-    "Machine Learning",
-    "Data Analysis",
-    "Data Visualization",
-  ],
-
-  "machine learning engineer": [
-    "Python",
-    "SQL",
-    "Machine Learning",
-    "Statistics",
-    "Data Structures and Algorithms",
-    "Data Analysis",
     "Git",
+    "Testing",
+  ],
+
+  "react.js developer": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "React",
+    "JSX",
+    "React Hooks",
+    "State Management",
+    "REST API",
+    "Responsive Design",
+    "Git",
+    "Testing",
+  ],
+
+  "next.js developer": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "React",
+    "Next.js",
+    "TypeScript",
+    "SSR and SSG",
+    "REST API",
+    "Authentication",
+    "Git",
+    "SEO",
+  ],
+
+  "node.js developer": [
+    "JavaScript",
+    "Node.js",
+    "Express.js",
+    "REST API",
+    "Authentication",
+    "MongoDB",
+    "SQL",
+    "Asynchronous Programming",
+    "Git",
+    "Testing",
   ],
 
   "java developer": [
     "Java",
     "Object-Oriented Programming",
     "Data Structures and Algorithms",
+    "Collections Framework",
+    "Exception Handling",
+    "Multithreading",
     "SQL",
     "REST API",
     "Git",
+    "Testing",
   ],
 
   "python developer": [
     "Python",
     "Object-Oriented Programming",
+    "Data Structures and Algorithms",
+    "Exception Handling",
     "SQL",
     "REST API",
     "Git",
+    "Testing",
+  ],
+
+  "c++ developer": [
+    "C++",
+    "Object-Oriented Programming",
     "Data Structures and Algorithms",
+    "Memory Management",
+    "Pointers",
+    "STL",
+    "Problem Solving",
+    "Operating Systems",
+    "Git",
+    "Testing",
+  ],
+
+  ".net developer": [
+    "C#",
+    ".NET",
+    "ASP.NET Core",
+    "Object-Oriented Programming",
+    "SQL",
+    "Entity Framework",
+    "REST API",
+    "Authentication",
+    "Git",
+    "Testing",
+  ],
+
+  "mobile app developer": [
+    "Programming",
+    "Mobile App Development",
+    "REST API",
+    "JSON",
+    "Authentication",
+    "Database Management",
+    "Git",
+    "UI Design",
+    "Testing",
+  ],
+
+  "android developer": [
+    "Kotlin",
+    "Java",
+    "Android SDK",
+    "Android Studio",
+    "REST API",
+    "JSON",
+    "Room Database",
+    "Git",
+    "Testing",
+  ],
+
+  "ios developer": [
+    "Swift",
+    "SwiftUI",
+    "UIKit",
+    "Xcode",
+    "REST API",
+    "JSON",
+    "Core Data",
+    "Git",
+    "Testing",
+  ],
+
+  "flutter developer": [
+    "Dart",
+    "Flutter",
+    "Widgets",
+    "State Management",
+    "REST API",
+    "Firebase",
+    "JSON",
+    "Git",
+    "Responsive UI",
+    "Testing",
+  ],
+
+  "data analyst": [
+    "SQL",
+    "Excel",
+    "Python",
+    "Data Analysis",
+    "Statistics",
+    "Data Visualization",
+    "Power BI",
+    "Tableau",
+    "Data Cleaning",
+  ],
+
+  "business analyst": [
+    "SQL",
+    "Excel",
+    "Data Analysis",
+    "Data Visualization",
+    "Requirements Gathering",
+    "Business Documentation",
+    "Communication",
+    "Problem Solving",
+    "Process Mapping",
+    "Stakeholder Management",
+  ],
+
+  "data scientist": [
+    "Python",
+    "SQL",
+    "Statistics",
+    "Probability",
+    "Machine Learning",
+    "Data Analysis",
+    "Data Visualization",
+    "Feature Engineering",
+    "Pandas",
+    "NumPy",
+  ],
+
+  "data engineer": [
+    "Python",
+    "SQL",
+    "Data Modeling",
+    "ETL Pipelines",
+    "Data Warehousing",
+    "Apache Spark",
+    "Apache Airflow",
+    "Cloud Computing",
+    "Database Management",
+    "Git",
+  ],
+
+  "machine learning engineer": [
+    "Python",
+    "Statistics",
+    "Linear Algebra",
+    "Machine Learning",
+    "Deep Learning",
+    "Data Structures and Algorithms",
+    "Feature Engineering",
+    "Model Evaluation",
+    "Scikit-learn",
+    "Git",
+  ],
+
+  "artificial intelligence engineer": [
+    "Python",
+    "Machine Learning",
+    "Deep Learning",
+    "Neural Networks",
+    "Natural Language Processing",
+    "Computer Vision",
+    "Statistics",
+    "Model Evaluation",
+    "REST API",
+    "Git",
+  ],
+
+  "ai application developer": [
+    "Python",
+    "JavaScript",
+    "REST API",
+    "Prompt Engineering",
+    "LLM Integration",
+    "Vector Databases",
+    "RAG",
+    "Authentication",
+    "Git",
+    "Testing",
+  ],
+
+  "generative ai engineer": [
+    "Python",
+    "Machine Learning",
+    "Deep Learning",
+    "LLM Integration",
+    "Prompt Engineering",
+    "RAG",
+    "Vector Databases",
+    "Embeddings",
+    "Model Evaluation",
+    "REST API",
+    "Git",
   ],
 
   "devops engineer": [
@@ -96,46 +343,203 @@ const ROLE_SKILL_REQUIREMENTS = {
     "Cloud Computing",
     "Networking",
     "Shell Scripting",
+    "Kubernetes",
+    "Monitoring",
+    "Infrastructure as Code",
+  ],
+
+  "cloud engineer": [
+    "Cloud Computing",
+    "Linux",
+    "Networking",
+    "Security",
+    "Docker",
+    "CI/CD",
+    "Infrastructure as Code",
+    "Monitoring",
+    "Git",
+    "Scripting",
+  ],
+
+  "qa engineer": [
+    "Software Testing",
+    "Manual Testing",
+    "Automation Testing",
+    "Test Case Design",
+    "Bug Tracking",
+    "API Testing",
+    "SQL",
+    "Regression Testing",
+    "Git",
+    "Selenium",
+  ],
+
+  "software tester": [
+    "Software Testing",
+    "Manual Testing",
+    "Test Case Design",
+    "Bug Reporting",
+    "Regression Testing",
+    "API Testing",
+    "SQL",
+    "Automation Testing",
+    "Selenium",
+  ],
+
+  "ui/ux designer": [
+    "UI Design",
+    "UX Design",
+    "Wireframing",
+    "Prototyping",
+    "Figma",
+    "User Research",
+    "Usability Testing",
+    "Information Architecture",
+    "Visual Design",
+    "Accessibility",
+  ],
+
+  "database administrator": [
+    "SQL",
+    "Database Management",
+    "DBMS",
+    "Database Design",
+    "Database Security",
+    "Backup and Recovery",
+    "Performance Tuning",
+    "Indexing",
+    "Query Optimization",
+    "Linux",
+  ],
+
+  "product manager": [
+    "Product Strategy",
+    "Market Research",
+    "Requirements Gathering",
+    "Roadmapping",
+    "Agile Methodology",
+    "Communication",
+    "Stakeholder Management",
+    "Data Analysis",
+    "Prioritization",
+    "Problem Solving",
+  ],
+
+  "network engineer": [
+    "Networking",
+    "TCP/IP",
+    "Routing and Switching",
+    "Network Security",
+    "DNS",
+    "DHCP",
+    "Firewalls",
+    "Linux",
+    "Troubleshooting",
+    "Cloud Networking",
+  ],
+
+  "embedded systems engineer": [
+    "C",
+    "C++",
+    "Microcontrollers",
+    "Embedded C",
+    "RTOS",
+    "Electronics Fundamentals",
+    "Communication Protocols",
+    "Debugging",
+    "Memory Management",
+    "Testing",
+  ],
+
+  "blockchain developer": [
+    "Blockchain Fundamentals",
+    "Solidity",
+    "Smart Contracts",
+    "JavaScript",
+    "Cryptography",
+    "Web3",
+    "Ethereum",
+    "REST API",
+    "Git",
+    "Testing",
+  ],
+
+  "technical support engineer": [
+    "Troubleshooting",
+    "Operating Systems",
+    "Networking",
+    "Linux",
+    "Windows",
+    "SQL",
+    "Customer Support",
+    "Communication",
+    "Problem Solving",
+    "Ticketing Systems",
+  ],
+
+  "competitive programmer": [
+    "C++",
+    "Data Structures and Algorithms",
+    "Problem Solving",
+    "Complexity Analysis",
+    "Dynamic Programming",
+    "Graph Algorithms",
+    "Greedy Algorithms",
+    "Recursion",
+    "Sorting and Searching",
+    "Mathematics",
+  ],
+
+  "other": [
+    "Programming",
+    "Problem Solving",
+    "Communication",
+    "SQL",
+    "Git",
+    "Data Structures and Algorithms",
   ],
 };
 
-const normalizeRole = (role) => {
-  if (typeof role !== "string") {
-    return "";
-  }
+const ROLE_ALIASES = {
+  "sde": "software development engineer (sde)",
+  "software development engineer": "software development engineer (sde)",
+  "software engineering": "software engineer",
+  "react developer": "react.js developer",
+  "reactjs developer": "react.js developer",
+  "nextjs developer": "next.js developer",
+  "full-stack developer": "full stack developer",
+  "fullstack developer": "full stack developer",
+  "mern developer": "mern stack developer",
+  "dotnet developer": ".net developer",
+  "c plus plus developer": "c++ developer",
+  "ai engineer": "artificial intelligence engineer",
+  "qa engineer / software tester": "qa engineer",
+  "quality assurance engineer": "qa engineer",
+  "ui ux designer": "ui/ux designer",
+  "ui-ux designer": "ui/ux designer",
+};
 
-  return role
+const normalizeRole = (role) => {
+  if (typeof role !== "string") return "";
+
+  const normalized = role
     .trim()
     .toLowerCase()
+    .replace(/[_]+/g, " ")
     .replace(/\s+/g, " ");
+
+  return ROLE_ALIASES[normalized] || normalized;
 };
 
 const getRequiredSkillsForRole = (role) => {
   const normalizedRole = normalizeRole(role);
 
-  if (!normalizedRole) {
-    return [];
-  }
-
-  if (ROLE_SKILL_REQUIREMENTS[normalizedRole]) {
-    return ROLE_SKILL_REQUIREMENTS[normalizedRole];
-  }
-
-  const matchingRole = Object.keys(ROLE_SKILL_REQUIREMENTS).find(
-    (availableRole) =>
-      normalizedRole.includes(availableRole) ||
-      availableRole.includes(normalizedRole)
-  );
-
-  if (!matchingRole) {
-    return [];
-  }
-
-  return ROLE_SKILL_REQUIREMENTS[matchingRole];
+  return ROLE_SKILL_REQUIREMENTS[normalizedRole] || [];
 };
 
 export {
   ROLE_SKILL_REQUIREMENTS,
+  ROLE_ALIASES,
   normalizeRole,
   getRequiredSkillsForRole,
 };

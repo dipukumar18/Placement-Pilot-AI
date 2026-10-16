@@ -125,6 +125,21 @@ const createPracticeSession = async ({
     ];
   }
 
+  if (questions.length < parsedLimit) {
+    const existingQuestionIds = questions.map((item) => item._id);
+    const broaderQuestions = await PracticeQuestion.find({
+      isActive: true,
+      category,
+      _id: { $nin: existingQuestionIds },
+    })
+      .select("_id")
+      .sort({ usageCount: 1, createdAt: -1 })
+      .limit(parsedLimit - questions.length)
+      .lean();
+
+    questions = [...questions, ...broaderQuestions];
+  }
+
   if (!questions.length) {
     const error = new Error(
       "No practice questions are available for the selected criteria"
@@ -156,10 +171,13 @@ const createPracticeSession = async ({
       totalQuestions: sessionQuestions.length,
       answeredQuestions: 0,
       evaluatedQuestions: 0,
+      skippedQuestions: 0,
       averageScore: 0,
       status: "not_started",
       startedAt: null,
       completedAt: null,
+      totalTimeSeconds: 0,
+      timeLimitSeconds: 0,
     });
 
   return practiceSession;

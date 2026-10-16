@@ -12,6 +12,8 @@ import roadmapRoutes from "./routes/roadmapRoutes.js";
 import practiceRoutes from "./routes/practiceRoutes.js";
 import practiceAttemptRoutes from "./routes/practiceAttemptRoutes.js";
 import practiceSessionRoutes from "./routes/practiceSessionRoutes.js";
+import interviewRoutes from "./routes/interviewRoutes.js";
+import readinessRoutes from "./routes/readinessRoutes.js";
 
 import {
   errorMiddleware,
@@ -43,6 +45,8 @@ app.use("/api/roadmap", roadmapRoutes);
 app.use("/api/practice", practiceRoutes);
 app.use("/api/practice", practiceAttemptRoutes);
 app.use("/api/practice-sessions", practiceSessionRoutes);
+app.use("/api/interviews", interviewRoutes);
+app.use("/api/readiness", readinessRoutes);
 app.get("/", (req, res) => {
   res.json({
     success: true,

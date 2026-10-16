@@ -237,3 +237,21 @@ export const getResume = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const getResumeHistory = async (req, res, next) => {
+  try {
+    const resumes = await Resume.find({ user: req.user.userId })
+      .select("originalFileName fileSize analysisStatus analysis createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: "Resume history retrieved successfully",
+      data: { resumes },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

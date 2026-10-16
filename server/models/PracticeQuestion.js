@@ -54,6 +54,26 @@ const practiceQuestionSchema = new mongoose.Schema(
       default: [],
     },
 
+    starterCode: {
+      type: String,
+      default: "",
+    },
+
+    functionSignature: {
+      type: String,
+      default: "",
+    },
+
+    testCases: {
+      type: [
+        {
+          input: { type: String, default: "" },
+          expectedOutput: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+
     correctAnswer: {
       type: String,
       default: "",

@@ -41,7 +41,7 @@ export const getPracticeQuestions = async (req, res, next) => {
     );
 
     const questions = await PracticeQuestion.find(query)
-      .select("-correctAnswer -expectedAnswer -explanation")
+      .select("-correctAnswer -expectedAnswer -explanation -testCases")
       .sort({ createdAt: -1 })
       .limit(parsedLimit)
       .lean();
@@ -71,7 +71,7 @@ export const getPracticeQuestionById = async (
       _id: id,
       isActive: true,
     })
-      .select("-correctAnswer -expectedAnswer -explanation")
+      .select("-correctAnswer -expectedAnswer -explanation -testCases")
       .lean();
 
     if (!question) {
@@ -106,6 +106,9 @@ export const createPracticeQuestion = async (
       targetRoles,
       skills,
       options,
+      starterCode,
+      functionSignature,
+      testCases,
       correctAnswer,
       expectedAnswer,
       explanation,
@@ -171,6 +174,9 @@ export const createPracticeQuestion = async (
         options: Array.isArray(options)
           ? options
           : [],
+        starterCode: typeof starterCode === "string" ? starterCode : "",
+        functionSignature: typeof functionSignature === "string" ? functionSignature : "",
+        testCases: Array.isArray(testCases) ? testCases : [],
         correctAnswer: correctAnswer || "",
         expectedAnswer: expectedAnswer || "",
         explanation: explanation || "",
@@ -185,11 +191,16 @@ export const createPracticeQuestion = async (
         source: source || "system",
       });
 
+    const safeQuestion = practiceQuestion.toObject();
+    delete safeQuestion.correctAnswer;
+    delete safeQuestion.expectedAnswer;
+    delete safeQuestion.explanation;
+
     return res.status(201).json({
       success: true,
       message:
         "Practice question created successfully",
-      data: practiceQuestion,
+      data: safeQuestion,
     });
   } catch (error) {
     return next(error);
@@ -216,4 +227,27 @@ export const getPracticeProgress = async (
   } catch (error) {
     return next(error);
   }
+};
+
+export const getAdminPracticeQuestions = async (req, res, next) => {
+  try {
+    const questions = await PracticeQuestion.find({})
+      .select("question questionType category difficulty isActive usageCount createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json({ success: true, message: "Admin practice questions retrieved successfully", data: { total: questions.length, questions } });
+  } catch (error) { return next(error); }
+};
+
+export const updateAdminPracticeQuestion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    if (typeof isActive !== "boolean") return res.status(422).json({ success: false, message: "isActive must be a boolean", errors: [] });
+    const question = await PracticeQuestion.findByIdAndUpdate(id, { $set: { isActive } }, { new: true })
+      .select("question questionType category difficulty isActive usageCount createdAt updatedAt")
+      .lean();
+    if (!question) return res.status(404).json({ success: false, message: "Practice question not found", errors: [] });
+    return res.status(200).json({ success: true, message: "Practice question status updated", data: question });
+  } catch (error) { return next(error); }
 };

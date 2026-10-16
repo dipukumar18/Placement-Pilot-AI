@@ -177,13 +177,27 @@ export const evaluatePracticeAnswer = async ({
   }
 
   if (question.questionType === "technical") {
-    return evaluateTechnicalAnswer({
+    if (!Array.isArray(question.evaluationCriteria) || question.evaluationCriteria.length === 0) {
+      return {
+        supported: false,
+        score: 0,
+        feedback: "This technical answer cannot be evaluated reliably because the question has no evaluation criteria.",
+        strengths: [],
+        improvementAreas: ["Add evaluation criteria before evaluating this question."],
+      };
+    }
+
+    return {
+      supported: true,
+      ...evaluateTechnicalAnswer({
       answer,
       question,
-    });
+      }),
+    };
   }
 
   return {
+    supported: false,
     score: 0,
     feedback:
       "This question type is not yet supported by the evaluation engine.",

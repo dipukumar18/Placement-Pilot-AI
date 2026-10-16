@@ -6,6 +6,7 @@ import uploadResume from "../middleware/uploadMiddleware.js";
 import {
   uploadResume as uploadResumeController,
   getResume,
+  getResumeHistory,
 } from "../controllers/resumeController.js";
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.post(
 );
 
 router.get("/", getResume);
+router.get("/history", getResumeHistory);
 
 export default router;

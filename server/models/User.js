@@ -74,6 +74,13 @@ const userSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+
+    gamification: {
+      points: { type: Number, default: 0, min: 0 },
+      badges: { type: [String], default: [] },
+      streak: { type: Number, default: 0, min: 0 },
+      lastActivityDate: { type: String, default: null },
+    },
   },
   {
     timestamps: true,

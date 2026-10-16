@@ -1,11 +1,12 @@
 import PracticeAttempt from "../models/PracticeAttempt.js";
 import PracticeQuestion from "../models/PracticeQuestion.js";
 import evaluatePracticeAnswer from "../services/practiceEvaluationService.js";
+import { awardActivity } from "../services/gamificationService.js";
 
 export const submitPracticeAttempt = async (req, res, next) => {
   try {
     const { questionId } = req.params;
-    const { answer, selectedOption, timeTaken } = req.body;
+    const { answer, selectedOption, timeTaken, language } = req.body;
 
     if (!answer && !selectedOption) {
       return res.status(400).json({
@@ -48,6 +49,7 @@ export const submitPracticeAttempt = async (req, res, next) => {
       question: question._id,
       answer: answer || selectedOption || "",
       selectedOption: selectedOption || "",
+      language: language || "",
       isCorrect,
       score,
       timeTaken: Number(timeTaken) || 0,
@@ -63,6 +65,15 @@ export const submitPracticeAttempt = async (req, res, next) => {
       }
     );
 
+    if (practiceAttempt.evaluationStatus === "completed") {
+      await awardActivity({
+        userId: req.user.userId,
+        activityKey: `practice_attempt:${practiceAttempt._id}`,
+        type: "practice_evaluated",
+        occurredAt: practiceAttempt.createdAt,
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: "Practice attempt submitted successfully",
@@ -72,7 +83,10 @@ export const submitPracticeAttempt = async (req, res, next) => {
         questionType: question.questionType,
         isCorrect,
         score,
+        resultLabel: question.questionType === "mcq" ? (isCorrect ? "correct" : "incorrect") : "pending",
+        correctAnswer: question.questionType === "mcq" ? question.correctAnswer : "",
         evaluationStatus: practiceAttempt.evaluationStatus,
+        explanation: question.questionType === "mcq" ? question.explanation : "",
         submittedAt: practiceAttempt.createdAt,
       },
     });
@@ -131,6 +145,23 @@ export const evaluatePracticeAttempt = async (
       answer: attempt.answer,
     });
 
+    const question = await PracticeQuestion.findById(attempt.question);
+
+    if (!evaluation.supported) {
+      return res.status(422).json({
+        success: false,
+        message: evaluation.feedback,
+        data: {
+          attemptId: attempt._id,
+          questionId: attempt.question,
+          questionType: question?.questionType || null,
+          evaluationStatus: attempt.evaluationStatus,
+          feedback: evaluation.feedback,
+          improvementAreas: evaluation.improvementAreas,
+        },
+      });
+    }
+
     attempt.score = evaluation.score;
     attempt.feedback = evaluation.feedback;
     attempt.strengths = evaluation.strengths;
@@ -138,7 +169,7 @@ export const evaluatePracticeAttempt = async (
       evaluation.improvementAreas;
     attempt.evaluationStatus = "completed";
 
-    if (attempt.questionType === "mcq") {
+    if (question?.questionType === "mcq") {
       attempt.isCorrect =
         evaluation.score === 100;
     }
@@ -152,6 +183,7 @@ export const evaluatePracticeAttempt = async (
         attemptId: attempt._id,
         questionId: attempt.question,
         score: attempt.score,
+        resultLabel: attempt.score >= 80 ? "correct" : attempt.score >= 40 ? "partially_correct" : "incorrect",
         isCorrect: attempt.isCorrect,
         evaluationStatus: attempt.evaluationStatus,
         feedback: attempt.feedback,

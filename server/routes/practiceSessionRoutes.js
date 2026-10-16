@@ -6,6 +6,7 @@ import {
   createSession,
   startSession,
   submitSessionAnswer,
+  evaluateSessionAnswer,
 } from "../controllers/practiceSessionController.js";
 
 const router = express.Router();
@@ -25,6 +26,11 @@ router.post(
 router.post(
   "/:sessionId/questions/:questionId/submit",
   submitSessionAnswer
+);
+
+router.post(
+  "/:sessionId/questions/:questionId/evaluate",
+  evaluateSessionAnswer
 );
 
 export default router;

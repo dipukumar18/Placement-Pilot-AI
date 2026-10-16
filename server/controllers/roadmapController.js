@@ -1,9 +1,52 @@
+
 import Roadmap from "../models/Roadmap.js";
 import Resume from "../models/Resume.js";
 import User from "../models/User.js";
 
 import analyzeSkillGap from "../services/skillGapAnalyzer.js";
 import generateRoadmap from "../services/roadmapGenerator.js";
+import { normalizeRole } from "../services/skillRequirements.js";
+
+const calculateRoadmapProgress = (roadmapItems) => {
+  const totalItems = roadmapItems.length;
+
+  if (totalItems === 0) {
+    return {
+      overallProgress: 0,
+      status: "not_started",
+    };
+  }
+
+  const totalProgress = roadmapItems.reduce(
+    (sum, item) => sum + (Number(item.progress) || 0),
+    0
+  );
+
+  const overallProgress = Math.round(totalProgress / totalItems);
+
+  let status = "not_started";
+
+  if (overallProgress === 100) {
+    status = "completed";
+  } else if (overallProgress > 0) {
+    status = "in_progress";
+  }
+
+  return { overallProgress, status };
+};
+
+const buildRoadmapResponse = (roadmap) => ({
+  id: roadmap._id,
+  targetRole: roadmap.targetRole,
+  matchPercentage: roadmap.matchPercentage,
+  matchedSkills: roadmap.matchedSkills,
+  missingSkills: roadmap.missingSkills,
+  overallProgress: roadmap.overallProgress,
+  status: roadmap.status,
+  roadmap: roadmap.roadmap,
+  createdAt: roadmap.createdAt,
+  updatedAt: roadmap.updatedAt,
+});
 
 export const getRoadmap = async (req, res, next) => {
   try {
@@ -69,60 +112,56 @@ export const getRoadmap = async (req, res, next) => {
         status: generatedRoadmap.status,
       });
     } else {
+      const oldRole = normalizeRole(roadmap.targetRole);
+      const newRole = normalizeRole(user.targetRole);
+
+      const roleChanged = oldRole !== newRole;
+
       roadmap.targetRole = generatedRoadmap.targetRole;
-      roadmap.matchPercentage = generatedRoadmap.matchPercentage;
-      roadmap.matchedSkills = generatedRoadmap.matchedSkills;
-      roadmap.missingSkills = generatedRoadmap.missingSkills;
+      roadmap.matchPercentage = skillGap.matchPercentage;
+      roadmap.matchedSkills = skillGap.matchedSkills;
+      roadmap.missingSkills = skillGap.missingSkills;
 
-      const existingProgress = new Map(
-        roadmap.roadmap.map((item) => [
-          item.skill.toLowerCase(),
-          {
-            status: item.status,
-            progress: item.progress,
-          },
-        ])
-      );
-
-      roadmap.roadmap = generatedRoadmap.roadmap.map((item) => {
-        const previous = existingProgress.get(
-          item.skill.toLowerCase()
-        );
-
-        if (!previous) {
-          return item;
-        }
-
-        return {
-          ...item,
-          status: previous.status,
-          progress: previous.progress,
-        };
-      });
-
-      const totalItems = roadmap.roadmap.length;
-
-      if (totalItems === 0) {
-        roadmap.overallProgress = 100;
-        roadmap.status = "completed";
+      if (roleChanged) {
+        // A different role gets a fresh learning roadmap.
+        roadmap.roadmap = generatedRoadmap.roadmap.map((item) => ({
+          ...item.toObject?.() ?? item,
+          status: "not_started",
+          progress: 0,
+        }));
       } else {
-        const totalProgress = roadmap.roadmap.reduce(
-          (sum, item) => sum + item.progress,
-          0
+        // Preserve learning progress only for the same target role.
+        const existingProgress = new Map(
+          roadmap.roadmap.map((item) => [
+            item.skill.toLowerCase(),
+            {
+              status: item.status,
+              progress: item.progress,
+            },
+          ])
         );
 
-        roadmap.overallProgress = Math.round(
-          totalProgress / totalItems
-        );
+        roadmap.roadmap = generatedRoadmap.roadmap.map((item) => {
+          const previous = existingProgress.get(
+            item.skill.toLowerCase()
+          );
 
-        if (roadmap.overallProgress === 100) {
-          roadmap.status = "completed";
-        } else if (roadmap.overallProgress > 0) {
-          roadmap.status = "in_progress";
-        } else {
-          roadmap.status = "not_started";
-        }
+          if (!previous) {
+            return item;
+          }
+
+          return {
+            ...item.toObject?.() ?? item,
+            status: previous.status,
+            progress: previous.progress,
+          };
+        });
       }
+
+      const progress = calculateRoadmapProgress(roadmap.roadmap);
+
+      roadmap.overallProgress = progress.overallProgress;
+      roadmap.status = progress.status;
 
       await roadmap.save();
     }
@@ -130,18 +169,7 @@ export const getRoadmap = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Personalized roadmap generated successfully",
-      data: {
-        id: roadmap._id,
-        targetRole: roadmap.targetRole,
-        matchPercentage: roadmap.matchPercentage,
-        matchedSkills: roadmap.matchedSkills,
-        missingSkills: roadmap.missingSkills,
-        overallProgress: roadmap.overallProgress,
-        status: roadmap.status,
-        roadmap: roadmap.roadmap,
-        createdAt: roadmap.createdAt,
-        updatedAt: roadmap.updatedAt,
-      },
+      data: buildRoadmapResponse(roadmap),
     });
   } catch (error) {
     return next(error);
@@ -166,9 +194,12 @@ export const updateRoadmapItem = async (req, res, next) => {
 
     if (
       progress !== undefined &&
-      (!Number.isFinite(Number(progress)) ||
+      (
+        progress === "" ||
+        !Number.isFinite(Number(progress)) ||
         Number(progress) < 0 ||
-        Number(progress) > 100)
+        Number(progress) > 100
+      )
     ) {
       return res.status(400).json({
         success: false,
@@ -199,62 +230,39 @@ export const updateRoadmapItem = async (req, res, next) => {
       });
     }
 
-    if (status !== undefined) {
-      roadmapItem.status = status;
-    }
-
     if (progress !== undefined) {
       roadmapItem.progress = Number(progress);
-    }
 
-    if (roadmapItem.progress === 100) {
-      roadmapItem.status = "completed";
-    } else if (roadmapItem.progress > 0) {
-      roadmapItem.status = "in_progress";
-    } else {
-      roadmapItem.status = "not_started";
-    }
-
-    const totalItems = roadmap.roadmap.length;
-
-    if (totalItems === 0) {
-      roadmap.overallProgress = 100;
-      roadmap.status = "completed";
-    } else {
-      const totalProgress = roadmap.roadmap.reduce(
-        (sum, item) => sum + item.progress,
-        0
-      );
-
-      roadmap.overallProgress = Math.round(
-        totalProgress / totalItems
-      );
-
-      if (roadmap.overallProgress === 100) {
-        roadmap.status = "completed";
-      } else if (roadmap.overallProgress > 0) {
-        roadmap.status = "in_progress";
+      if (roadmapItem.progress === 100) {
+        roadmapItem.status = "completed";
+      } else if (roadmapItem.progress > 0) {
+        roadmapItem.status = "in_progress";
       } else {
-        roadmap.status = "not_started";
+        roadmapItem.status = "not_started";
+      }
+    } else if (status !== undefined) {
+      roadmapItem.status = status;
+
+      if (status === "completed") {
+        roadmapItem.progress = 100;
+      } else if (status === "not_started") {
+        roadmapItem.progress = 0;
+      } else if (roadmapItem.progress === 0 || roadmapItem.progress === 100) {
+        roadmapItem.progress = 1;
       }
     }
+
+    const calculated = calculateRoadmapProgress(roadmap.roadmap);
+
+    roadmap.overallProgress = calculated.overallProgress;
+    roadmap.status = calculated.status;
 
     await roadmap.save();
 
     return res.status(200).json({
       success: true,
       message: "Roadmap progress updated successfully",
-      data: {
-        id: roadmap._id,
-        targetRole: roadmap.targetRole,
-        matchPercentage: roadmap.matchPercentage,
-        matchedSkills: roadmap.matchedSkills,
-        missingSkills: roadmap.missingSkills,
-        overallProgress: roadmap.overallProgress,
-        status: roadmap.status,
-        roadmap: roadmap.roadmap,
-        updatedAt: roadmap.updatedAt,
-      },
+      data: buildRoadmapResponse(roadmap),
     });
   } catch (error) {
     return next(error);

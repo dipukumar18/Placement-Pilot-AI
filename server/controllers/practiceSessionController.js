@@ -3,7 +3,10 @@ import PracticeSession from "../models/PracticeSession.js";
 
 import createPracticeSession from "../services/practiceSessionService.js";
 
-import submitSessionAnswerService from "../services/practiceSessionAnswerService.js";
+import submitSessionAnswerService, {
+  evaluateSessionAnswer as evaluateSessionAnswerService,
+} from "../services/practiceSessionAnswerService.js";
+import evaluatePracticeAnswer from "../services/practiceEvaluationService.js";
 
 export const createSession = async (
   req,
@@ -80,7 +83,7 @@ export const startSession = async (
         user: req.user.userId,
       }).populate(
         "questions.question",
-        "question questionType category difficulty targetRoles skills options hints"
+        "question questionType category difficulty targetRoles skills options hints starterCode functionSignature"
       );
 
     if (!practiceSession) {
@@ -133,6 +136,9 @@ export const startSession = async (
             practiceSession.status,
           startedAt:
             practiceSession.startedAt,
+          completedAt: practiceSession.completedAt,
+          totalTimeSeconds: practiceSession.totalTimeSeconds,
+          skippedQuestions: practiceSession.skippedQuestions,
           questions:
             practiceSession.questions.map(
               (item) => ({
@@ -158,6 +164,8 @@ export const startSession = async (
                   item.question?.options || [],
                 hints:
                   item.question?.hints || [],
+                starterCode: item.question?.starterCode || "",
+                functionSignature: item.question?.functionSignature || "",
               })
             ),
         },
@@ -197,6 +205,9 @@ export const startSession = async (
           practiceSession.status,
         startedAt:
           practiceSession.startedAt,
+        completedAt: practiceSession.completedAt,
+        totalTimeSeconds: practiceSession.totalTimeSeconds,
+        skippedQuestions: practiceSession.skippedQuestions,
         questions:
           practiceSession.questions.map(
             (item) => ({
@@ -222,6 +233,8 @@ export const startSession = async (
                 item.question?.options || [],
               hints:
                 item.question?.hints || [],
+                starterCode: item.question?.starterCode || "",
+                functionSignature: item.question?.functionSignature || "",
             })
           ),
       },
@@ -246,6 +259,8 @@ export const submitSessionAnswer = async (
       answer,
       selectedOption,
       timeTaken,
+      language,
+      skipped,
     } = req.body;
 
     const result =
@@ -256,12 +271,33 @@ export const submitSessionAnswer = async (
         answer,
         selectedOption,
         timeTaken,
+        language,
+        skipped,
       });
 
     return res.status(201).json({
       success: true,
       message:
         "Session answer submitted successfully",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const evaluateSessionAnswer = async (req, res, next) => {
+  try {
+    const result = await evaluateSessionAnswerService({
+      userId: req.user.userId,
+      sessionId: req.params.sessionId,
+      questionId: req.params.questionId,
+      evaluator: evaluatePracticeAnswer,
+    });
+
+    return res.status(result.pending ? 422 : 200).json({
+      success: !result.pending,
+      message: result.pending ? result.feedback : "Session answer evaluated successfully",
       data: result,
     });
   } catch (error) {

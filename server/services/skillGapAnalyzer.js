@@ -1,104 +1,6 @@
+
 import { getRequiredSkillsForRole } from "./skillRequirements.js";
-
-const normalizeSkill = (skill) => {
-  if (typeof skill !== "string") {
-    return "";
-  }
-
-  return skill
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
-};
-
-const SKILL_ALIASES = {
-  "react.js": "react",
-  react: "react",
-
-  "node.js": "node.js",
-  node: "node.js",
-
-  "express": "express.js",
-  "express.js": "express.js",
-
-  "mongodb": "mongodb",
-  "mongo": "mongodb",
-
-  "javascript": "javascript",
-  js: "javascript",
-
-  "typescript": "typescript",
-  ts: "typescript",
-
-  "c++": "c++",
-
-  "data structures and algorithms":
-    "data structures and algorithms",
-
-  dsa: "data structures and algorithms",
-
-  "full-stack": "full stack",
-  "full stack": "full stack",
-
-  backend: "backend",
-  "back-end": "backend",
-
-  frontend: "frontend",
-  "front-end": "frontend",
-
-  "problem solving": "problem solving",
-
-  sql: "sql",
-
-  git: "git",
-
-  github: "github",
-
-  "rest api": "rest api",
-
-  authentication: "authentication",
-
-  "object-oriented programming":
-    "object-oriented programming",
-
-  oop: "object-oriented programming",
-
-  html: "html",
-
-  css: "css",
-
-  "tailwind css": "tailwind css",
-
-  python: "python",
-
-  java: "java",
-
-  php: "php",
-
-  "machine learning": "machine learning",
-
-  statistics: "statistics",
-
-  "data analysis": "data analysis",
-
-  "data visualization": "data visualization",
-
-  excel: "excel",
-
-  docker: "docker",
-
-  "ci/cd": "ci/cd",
-
-  "cloud computing": "cloud computing",
-
-  networking: "networking",
-
-  "shell scripting": "shell scripting",
-
-  linux: "linux",
-
-  "responsive design": "responsive design",
-};
+import { normalizeSkill, getSkillKey } from "../utils/skillNormalizer.js";
 
 const getCanonicalSkill = (skill) => {
   const normalized = normalizeSkill(skill);
@@ -107,7 +9,7 @@ const getCanonicalSkill = (skill) => {
     return "";
   }
 
-  return SKILL_ALIASES[normalized] || normalized;
+  return getSkillKey(normalized);
 };
 
 const uniqueSkills = (skills) => {
@@ -125,30 +27,38 @@ const uniqueSkills = (skills) => {
     }
 
     if (!skillMap.has(canonicalSkill)) {
-      skillMap.set(canonicalSkill, skill);
+      skillMap.set(canonicalSkill, normalizedDisplayName(skill));
     }
   });
 
   return [...skillMap.values()];
 };
 
+const normalizedDisplayName = (skill) => {
+  return normalizeSkill(skill) || skill;
+};
+
 export const analyzeSkillGap = ({
   targetRole,
   resumeSkills = [],
 }) => {
-  const requiredSkills =
-    getRequiredSkillsForRole(targetRole);
+  const requiredSkills = getRequiredSkillsForRole(targetRole);
 
   const normalizedResumeSkills = new Set(
-    resumeSkills.map(getCanonicalSkill).filter(Boolean)
+    (Array.isArray(resumeSkills) ? resumeSkills : [])
+      .map(getCanonicalSkill)
+      .filter(Boolean)
   );
 
   const matchedSkills = [];
   const missingSkills = [];
 
   requiredSkills.forEach((requiredSkill) => {
-    const canonicalRequiredSkill =
-      getCanonicalSkill(requiredSkill);
+    const canonicalRequiredSkill = getCanonicalSkill(requiredSkill);
+
+    if (!canonicalRequiredSkill) {
+      return;
+    }
 
     if (normalizedResumeSkills.has(canonicalRequiredSkill)) {
       matchedSkills.push(requiredSkill);
@@ -157,24 +67,28 @@ export const analyzeSkillGap = ({
     }
   });
 
-  const totalRequiredSkills = requiredSkills.length;
+  const normalizedRequiredSkills = uniqueSkills(requiredSkills);
+  const normalizedMatchedSkills = uniqueSkills(matchedSkills);
+  const normalizedMissingSkills = uniqueSkills(missingSkills);
+
+  const totalRequiredSkills = normalizedRequiredSkills.length;
+  const totalMatchedSkills = normalizedMatchedSkills.length;
+  const totalMissingSkills = normalizedMissingSkills.length;
 
   const matchPercentage =
     totalRequiredSkills > 0
-      ? Math.round(
-          (matchedSkills.length / totalRequiredSkills) * 100
-        )
+      ? Math.round((totalMatchedSkills / totalRequiredSkills) * 100)
       : 0;
 
   return {
     targetRole: targetRole || "",
-    requiredSkills: uniqueSkills(requiredSkills),
-    matchedSkills: uniqueSkills(matchedSkills),
-    missingSkills: uniqueSkills(missingSkills),
+    requiredSkills: normalizedRequiredSkills,
+    matchedSkills: normalizedMatchedSkills,
+    missingSkills: normalizedMissingSkills,
     matchPercentage,
     totalRequiredSkills,
-    totalMatchedSkills: matchedSkills.length,
-    totalMissingSkills: missingSkills.length,
+    totalMatchedSkills,
+    totalMissingSkills,
   };
 };
 

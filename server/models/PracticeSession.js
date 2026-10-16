@@ -26,6 +26,7 @@ const practiceSessionQuestionSchema =
         enum: [
           "not_answered",
           "answered",
+          "skipped",
           "evaluated",
         ],
         default: "not_answered",
@@ -107,6 +108,12 @@ const practiceSessionSchema =
         min: 0,
       },
 
+      skippedQuestions: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
       averageScore: {
         type: Number,
         default: 0,
@@ -132,6 +139,18 @@ const practiceSessionSchema =
       completedAt: {
         type: Date,
         default: null,
+      },
+
+      totalTimeSeconds: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+      timeLimitSeconds: {
+        type: Number,
+        default: 0,
+        min: 0,
       },
     },
     {
